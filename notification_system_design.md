@@ -1410,3 +1410,262 @@ Potential future improvements include:
 - centralized observability dashboards
 
 These improvements support enterprise-scale growth.
+
+---
+
+# Stage 6
+
+# Priority Notification Processing and Efficient Top-10 Maintenance
+
+The notification platform supports priority-based notifications to ensure that important updates are surfaced immediately to users.
+
+Examples of high-priority notifications include:
+
+- placement deadlines
+- emergency campus alerts
+- result announcements
+- interview schedules
+
+The system must efficiently maintain the highest priority notifications without repeatedly sorting the full dataset.
+
+---
+
+# Problem Statement
+
+If the platform stores thousands or millions of notifications, repeatedly sorting the entire notification list becomes computationally expensive.
+
+Example inefficient approach:
+
+```ts
+notifications.sort((a, b) => b.priority - a.priority);
+```
+
+Problems:
+- expensive repeated sorting
+- poor scalability
+- increased latency
+- inefficient CPU usage
+
+Time Complexity:
+```text
+O(n log n)
+```
+
+This becomes inefficient at scale.
+
+---
+
+# Recommended Data Structure
+
+A Min Heap (Priority Queue) is recommended for maintaining the top 10 highest priority notifications.
+
+---
+
+# Why Min Heap?
+
+A Min Heap allows:
+
+- efficient insertion
+- efficient removal
+- efficient top-10 maintenance
+- lower computational overhead
+
+---
+
+# Heap Strategy
+
+## Core Idea
+
+Maintain:
+- a Min Heap of size 10
+
+Rules:
+- if heap size < 10:
+  - insert notification
+- else:
+  - compare with smallest priority item
+  - replace if higher priority exists
+
+This ensures:
+- only top 10 notifications remain
+- minimal sorting overhead
+
+---
+
+# Time Complexity Analysis
+
+| Operation | Complexity |
+|---|---|
+| Insert into heap | O(log k) |
+| Remove minimum | O(log k) |
+| Fetch top notifications | O(k) |
+
+Where:
+```text
+k = 10
+```
+
+This is significantly more efficient than repeatedly sorting all notifications.
+
+---
+
+# Example Notification Structure
+
+```ts
+interface Notification {
+  id: string;
+  title: string;
+  priority: number;
+  createdAt: string;
+}
+```
+
+---
+
+# Sample Heap-Based Algorithm
+
+```ts
+class MinHeap {
+  heap: Notification[] = [];
+
+  insert(notification: Notification) {
+    // Heap insertion logic
+  }
+
+  removeMin() {
+    // Remove minimum priority item
+  }
+
+  peek() {
+    return this.heap[0];
+  }
+}
+```
+
+---
+
+# Top-10 Maintenance Logic
+
+```ts
+for (const notification of notifications) {
+  if (heap.size() < 10) {
+    heap.insert(notification);
+  } else if (
+    notification.priority > heap.peek().priority
+  ) {
+    heap.removeMin();
+    heap.insert(notification);
+  }
+}
+```
+
+---
+
+# Why This Approach Is Efficient
+
+Instead of sorting:
+
+```text
+O(n log n)
+```
+
+The heap approach reduces processing to:
+
+```text
+O(n log k)
+```
+
+Where:
+```text
+k = 10
+```
+
+Since:
+```text
+log(10)
+```
+
+is extremely small, performance improves significantly.
+
+---
+
+# Real-Time Priority Updates
+
+When new notifications arrive:
+
+1. Compare priority against heap minimum
+2. Update heap if required
+3. Push updated top notifications to frontend
+
+Benefits:
+- instant priority updates
+- efficient processing
+- scalable architecture
+
+---
+
+# Priority Notification Delivery
+
+High-priority notifications may bypass standard queues.
+
+Possible strategies:
+- dedicated priority queues
+- faster retry intervals
+- immediate WebSocket delivery
+
+Benefits:
+- reduced delivery latency
+- improved visibility
+- better user responsiveness
+
+---
+
+# Scalability Considerations
+
+As notification volume grows:
+
+- heap operations remain efficient
+- memory usage remains controlled
+- processing cost stays predictable
+
+This makes the architecture suitable for large-scale deployments.
+
+---
+
+# Logging Integration
+
+Priority processing events are logged using the reusable middleware.
+
+## Example
+
+```ts
+await Log(
+  "backend",
+  "info",
+  "priority-notification-service",
+  "Top 10 priority notifications updated"
+);
+```
+
+```ts
+await Log(
+  "backend",
+  "warn",
+  "priority-notification-service",
+  "High-priority notification queue spike detected"
+);
+```
+
+---
+
+# Future Improvements
+
+Potential future enhancements include:
+
+- distributed priority queues
+- AI-based notification ranking
+- personalized notification prioritization
+- adaptive priority scoring
+- machine learning recommendation systems
+
+These improvements can further enhance user experience and scalability.
