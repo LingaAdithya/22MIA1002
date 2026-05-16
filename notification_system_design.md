@@ -1089,3 +1089,324 @@ Potential future improvements include:
 - Background synchronization
 
 These enhancements improve scalability and user experience.
+
+---
+
+# Stage 5
+
+# High Volume Notification Processing and Fault Tolerance
+
+As the platform scales, the notification system must support large bursts of concurrent notification delivery while maintaining reliability, low latency, and fault tolerance.
+
+Examples of high-volume scenarios include:
+
+- placement announcements
+- exam result publication
+- campus-wide emergency alerts
+- bulk event notifications
+
+These events may generate thousands of notifications simultaneously.
+
+---
+
+# Challenges in High-Volume Notification Systems
+
+Potential system challenges include:
+
+1. Database overload
+2. API bottlenecks
+3. Message delivery failures
+4. Network instability
+5. Duplicate notification delivery
+6. Slow notification processing
+7. Retry storms
+8. High memory consumption
+
+---
+
+# Recommended Architecture
+
+```text
+Client Request
+      |
+      v
+Notification API Service
+      |
+      v
+Message Queue
+      |
+      v
+Notification Worker Services
+      |
+      +----------------+
+      |                |
+      v                v
+Database         WebSocket Gateway
+```
+
+---
+
+# Why Message Queues?
+
+Instead of processing notifications synchronously during API requests, notifications are pushed into a queue for asynchronous processing.
+
+Benefits:
+- lower API latency
+- improved scalability
+- fault tolerance
+- retry capability
+- traffic smoothing
+
+---
+
+# Recommended Queue Technologies
+
+Possible technologies include:
+
+| Technology | Purpose |
+|---|---|
+| Redis + BullMQ | Lightweight queue processing |
+| RabbitMQ | Reliable distributed messaging |
+| Apache Kafka | High throughput event streaming |
+
+For this system, Redis + BullMQ is recommended because:
+- lightweight setup
+- fast processing
+- retry support
+- delayed jobs
+- good Node.js ecosystem integration
+
+---
+
+# Notification Processing Flow
+
+## Step 1
+
+Client creates notification request.
+
+```http
+POST /api/v1/notifications
+```
+
+---
+
+## Step 2
+
+Backend validates request and pushes job into queue.
+
+Example:
+
+```ts
+await notificationQueue.add("send-notification", payload);
+```
+
+---
+
+## Step 3
+
+Worker service consumes queued jobs asynchronously.
+
+---
+
+## Step 4
+
+Notification is:
+- stored in database
+- delivered via WebSocket
+- logged through middleware
+
+---
+
+# Retry Mechanism
+
+Notification delivery failures are retried automatically.
+
+## Retry Strategy
+
+Example configuration:
+
+```ts
+{
+  attempts: 5,
+  backoff: {
+    type: "exponential",
+    delay: 1000
+  }
+}
+```
+
+Benefits:
+- handles temporary failures
+- improves delivery reliability
+- reduces manual intervention
+
+---
+
+# Dead Letter Queue (DLQ)
+
+Failed notifications that exceed retry limits are moved into a Dead Letter Queue.
+
+Benefits:
+- prevents infinite retry loops
+- isolates failed jobs
+- improves observability
+- enables later inspection
+
+---
+
+# Idempotency
+
+The system should avoid duplicate notification processing.
+
+Example strategy:
+- unique notification IDs
+- deduplication checks
+- idempotent worker execution
+
+Benefits:
+- prevents duplicate delivery
+- improves consistency
+
+---
+
+# Batch Processing
+
+Bulk notifications should be processed in batches.
+
+Instead of:
+
+```text
+1 DB insert per notification
+```
+
+Use:
+
+```text
+Batch inserts and grouped delivery
+```
+
+Benefits:
+- lower database overhead
+- improved throughput
+- reduced network cost
+
+---
+
+# Horizontal Scaling
+
+Worker services can scale horizontally.
+
+Example:
+
+```text
+Worker 1
+Worker 2
+Worker 3
+Worker N
+```
+
+Benefits:
+- improved throughput
+- distributed workload
+- better fault tolerance
+
+---
+
+# Rate Limiting
+
+Rate limiting prevents system overload.
+
+Possible protections:
+- API rate limiting
+- queue throttling
+- WebSocket event throttling
+
+Benefits:
+- protects infrastructure
+- prevents abuse
+- improves stability
+
+---
+
+# Eventual Consistency
+
+The system follows eventual consistency principles.
+
+Reason:
+- asynchronous processing
+- distributed workers
+- retry mechanisms
+
+This approach improves:
+- scalability
+- reliability
+- throughput
+
+---
+
+# Monitoring and Observability
+
+Critical metrics should be monitored:
+
+| Metric | Purpose |
+|---|---|
+| Queue size | Detect processing backlog |
+| Retry count | Detect delivery failures |
+| Processing latency | Detect slow workers |
+| Failed jobs | Detect system instability |
+| WebSocket failures | Detect delivery issues |
+
+---
+
+# Logging Integration
+
+All queue operations and worker events are logged.
+
+## Example
+
+```ts
+await Log(
+  "backend",
+  "info",
+  "notification-worker",
+  "Notification job processed successfully"
+);
+```
+
+```ts
+await Log(
+  "backend",
+  "error",
+  "notification-worker",
+  "Notification delivery failed after retries"
+);
+```
+
+---
+
+# Failure Recovery Strategy
+
+Recovery mechanisms include:
+
+- automatic retries
+- dead letter queues
+- worker restarts
+- persistent queue storage
+- monitoring alerts
+
+These strategies improve system resilience.
+
+---
+
+# Future Scalability Enhancements
+
+Potential future improvements include:
+
+- distributed event streaming
+- multi-region queue replication
+- push notification gateways
+- email notification pipelines
+- distributed tracing
+- centralized observability dashboards
+
+These improvements support enterprise-scale growth.
