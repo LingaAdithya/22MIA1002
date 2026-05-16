@@ -19,3 +19,13 @@ export async function createNotification(
 
   return response.data.data;
 }
+
+export async function markAsRead(
+  id: string
+) {
+  const response = await axios.patch(
+    `${API_BASE_URL}/${id}/read`
+  );
+
+  return response.data.data;
+}

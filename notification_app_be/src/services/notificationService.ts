@@ -23,3 +23,20 @@ export function createNotification(
 
   return notification;
 }
+
+export function markNotificationAsRead(
+  id: string
+): Notification | undefined {
+
+  const notification = notifications.find(
+    (notification) => notification.id === id
+  );
+
+  if (!notification) {
+    return undefined;
+  }
+
+  notification.isRead = true;
+
+  return notification;
+}

@@ -4,9 +4,12 @@ import {
   Typography,
   Chip,
   Stack,
+  Button,
 } from "@mui/material";
 
 import type { Notification } from "../types/notification";
+
+import { markAsRead } from "../services/notificationService";
 
 interface Props {
   notification: Notification;
@@ -15,14 +18,25 @@ interface Props {
 export default function NotificationCard({
   notification,
 }: Props) {
+
+  async function handleRead() {
+    await markAsRead(notification.id);
+
+    window.location.reload();
+  }
+
   return (
     <Card
       sx={{
         borderRadius: 3,
         mb: 2,
+        opacity: notification.isRead
+          ? 0.7
+          : 1,
       }}
     >
       <CardContent>
+
         <Stack
           direction="row"
           sx={{
@@ -35,10 +49,29 @@ export default function NotificationCard({
             {notification.title}
           </Typography>
 
-          <Chip
-            label={notification.type}
-            color="primary"
-          />
+          <Stack
+            direction="row"
+            spacing={1}
+          >
+            <Chip
+              label={notification.type}
+              color="primary"
+            />
+
+            <Chip
+              label={
+                notification.isRead
+                  ? "Read"
+                  : "Unread"
+              }
+              color={
+                notification.isRead
+                  ? "success"
+                  : "warning"
+              }
+            />
+          </Stack>
+
         </Stack>
 
         <Typography variant="body1" mb={2}>
@@ -48,11 +81,23 @@ export default function NotificationCard({
         <Typography
           variant="caption"
           color="text.secondary"
+          display="block"
+          mb={2}
         >
           {new Date(
             notification.createdAt
           ).toLocaleString()}
         </Typography>
+
+        {!notification.isRead && (
+          <Button
+            variant="contained"
+            onClick={handleRead}
+          >
+            Mark As Read
+          </Button>
+        )}
+
       </CardContent>
     </Card>
   );
