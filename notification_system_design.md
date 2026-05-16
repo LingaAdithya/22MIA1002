@@ -517,3 +517,280 @@ await Log(
   "Database query failed while fetching notifications"
 );
 ```
+
+---
+
+# Stage 3
+
+# Query Optimization and Computational Efficiency
+
+As the notification platform scales to thousands or millions of notifications, query optimization becomes critical for maintaining low latency and system responsiveness.
+
+The primary optimization goals are:
+
+- Reduce database scan cost
+- Minimize response latency
+- Improve pagination performance
+- Optimize sorting operations
+- Reduce unnecessary data transfer
+- Improve concurrent read efficiency
+
+---
+
+# Common Performance Bottlenecks
+
+Potential bottlenecks include:
+
+1. Full table scans
+2. Expensive sorting operations
+3. Large OFFSET pagination
+4. Repeated unread notification queries
+5. Excessive database round trips
+6. Fetching unnecessary columns
+7. High concurrent access
+
+---
+
+# Query Optimization Strategies
+
+## 1. Avoid SELECT *
+
+Bad Practice:
+
+```sql
+SELECT *
+FROM notifications;
+```
+
+Problem:
+- unnecessary data transfer
+- increased memory usage
+- slower query execution
+
+Optimized Query:
+
+```sql
+SELECT id, title, message, notification_type, created_at
+FROM notifications;
+```
+
+Benefits:
+- reduced payload size
+- improved execution speed
+- lower memory consumption
+
+---
+
+# 2. Composite Indexing
+
+Frequently used filters should use composite indexes.
+
+## Recommended Composite Index
+
+```sql
+CREATE INDEX idx_notifications_student_read_created
+ON notifications(student_id, is_read, created_at DESC);
+```
+
+Benefits:
+- faster filtering
+- optimized sorting
+- reduced scan cost
+
+This index supports queries such as:
+
+```sql
+SELECT id, title, message
+FROM notifications
+WHERE student_id = 'student-uuid'
+AND is_read = FALSE
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+---
+
+# 3. Efficient Pagination Strategy
+
+OFFSET-based pagination becomes expensive at large scale.
+
+Problematic Query:
+
+```sql
+SELECT *
+FROM notifications
+ORDER BY created_at DESC
+LIMIT 10 OFFSET 100000;
+```
+
+Problem:
+- database scans large numbers of rows
+- increasing latency
+
+---
+
+# Cursor-Based Pagination
+
+Recommended Approach:
+
+```sql
+SELECT id, title, message, created_at
+FROM notifications
+WHERE created_at < '2026-05-16T10:00:00Z'
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+Benefits:
+- lower computational cost
+- scalable pagination
+- improved response time
+
+---
+
+# 4. Query Result Caching
+
+Frequently requested notification lists can be cached using Redis.
+
+## Cache Example
+
+```text
+notifications:student_id:unread
+```
+
+Benefits:
+- reduced DB load
+- faster response time
+- improved scalability
+
+---
+
+# 5. Database Connection Pooling
+
+Connection pooling improves concurrent database performance.
+
+Benefits:
+- reduced connection overhead
+- improved throughput
+- better resource utilization
+
+Recommended libraries:
+- pg-pool
+- Prisma pooling
+- Sequelize pooling
+
+---
+
+# 6. Read Optimization
+
+The system prioritizes read efficiency because notification systems are typically read-heavy.
+
+Optimizations include:
+- indexed queries
+- caching
+- lightweight response payloads
+- optimized pagination
+
+---
+
+# 7. Batch Notification Inserts
+
+Instead of inserting notifications one-by-one:
+
+Bad Practice:
+
+```sql
+INSERT INTO notifications VALUES (...);
+INSERT INTO notifications VALUES (...);
+INSERT INTO notifications VALUES (...);
+```
+
+Optimized Batch Insert:
+
+```sql
+INSERT INTO notifications (
+    id,
+    student_id,
+    title,
+    message,
+    notification_type
+)
+VALUES
+(...),
+(...),
+(...);
+```
+
+Benefits:
+- fewer DB round trips
+- improved write throughput
+- reduced latency
+
+---
+
+# 8. Asynchronous Processing
+
+Heavy notification processing should be asynchronous.
+
+Examples:
+- email notifications
+- push notifications
+- analytics updates
+
+Benefits:
+- reduced API response time
+- improved user experience
+- better scalability
+
+---
+
+# Estimated Computational Improvements
+
+| Optimization | Improvement |
+|---|---|
+| Composite indexing | Faster filtering and sorting |
+| Cursor pagination | Reduced scan complexity |
+| Redis caching | Lower DB load |
+| Batch inserts | Higher write throughput |
+| Async processing | Lower request latency |
+
+---
+
+# Logging and Monitoring
+
+All expensive queries and optimization events are logged.
+
+## Example
+
+```ts
+await Log(
+  "backend",
+  "info",
+  "notification-query-service",
+  "Optimized notification query executed successfully"
+);
+```
+
+```ts
+await Log(
+  "backend",
+  "warn",
+  "notification-query-service",
+  "High latency detected for notification retrieval"
+);
+```
+
+---
+
+# Future Optimization Opportunities
+
+Future improvements may include:
+
+- Read replicas
+- Materialized views
+- Query prefetching
+- CDN-backed notification assets
+- Distributed caching
+- Event-driven architectures
+
+These optimizations improve long-term scalability and reliability.
