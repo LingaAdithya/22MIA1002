@@ -10,6 +10,7 @@ import { useState } from "react";
 import { createNotification } from "../services/notificationService";
 
 export default function CreateNotificationForm() {
+
   const [title, setTitle] = useState("");
 
   const [message, setMessage] =
@@ -36,6 +37,32 @@ export default function CreateNotificationForm() {
     window.location.reload();
   }
 
+  const darkFieldStyles = {
+    "& .MuiInputLabel-root": {
+      color: "#bbb",
+    },
+
+    "& .MuiOutlinedInput-root": {
+      color: "#fff",
+
+      "& fieldset": {
+        borderColor: "#555",
+      },
+
+      "&:hover fieldset": {
+        borderColor: "#888",
+      },
+
+      "&.Mui-focused fieldset": {
+        borderColor: "#1976d2",
+      },
+    },
+
+    "& .MuiSvgIcon-root": {
+      color: "#fff",
+    },
+  };
+
   return (
     <Box
       component="form"
@@ -47,6 +74,7 @@ export default function CreateNotificationForm() {
         gap: 2,
       }}
     >
+
       <TextField
         label="Title"
         value={title}
@@ -54,6 +82,7 @@ export default function CreateNotificationForm() {
           setTitle(e.target.value)
         }
         required
+        sx={darkFieldStyles}
       />
 
       <TextField
@@ -63,6 +92,7 @@ export default function CreateNotificationForm() {
           setMessage(e.target.value)
         }
         required
+        sx={darkFieldStyles}
       />
 
       <TextField
@@ -72,7 +102,9 @@ export default function CreateNotificationForm() {
         onChange={(e) =>
           setType(e.target.value)
         }
+        sx={darkFieldStyles}
       >
+
         <MenuItem value="Placement">
           Placement
         </MenuItem>
@@ -84,14 +116,17 @@ export default function CreateNotificationForm() {
         <MenuItem value="Result">
           Result
         </MenuItem>
+
       </TextField>
 
       <Button
         type="submit"
         variant="contained"
+        size="large"
       >
         Create Notification
       </Button>
+
     </Box>
   );
 }
