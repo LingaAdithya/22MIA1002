@@ -794,3 +794,298 @@ Future improvements may include:
 - Event-driven architectures
 
 These optimizations improve long-term scalability and reliability.
+
+---
+
+# Stage 4
+
+# Frontend Performance and Real-Time Optimization
+
+The frontend application is designed using React with Material UI to provide a scalable, responsive, and real-time notification experience.
+
+The primary frontend goals are:
+
+- Real-time updates
+- Fast rendering
+- Low latency UI interactions
+- Efficient state management
+- Minimal unnecessary re-renders
+- Responsive user experience
+
+---
+
+# Frontend Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| React | Component-based frontend architecture |
+| TypeScript | Type safety and maintainability |
+| Material UI | Consistent and responsive UI |
+| WebSockets | Real-time notification delivery |
+| Axios | API communication |
+
+---
+
+# Real-Time Notification Strategy
+
+The frontend receives notifications through WebSocket connections.
+
+## WebSocket Benefits
+
+- Persistent connection
+- Instant updates
+- Lower latency
+- Reduced polling overhead
+- Efficient server-client communication
+
+---
+
+# WebSocket Event Flow
+
+```text
+Backend Notification Service
+            |
+            v
+      WebSocket Server
+            |
+            v
+      Connected Clients
+            |
+            v
+React State Update + UI Re-render
+```
+
+---
+
+# Frontend Rendering Challenges
+
+Potential frontend bottlenecks include:
+
+1. Frequent re-renders
+2. Large notification lists
+3. Expensive DOM updates
+4. Repeated API calls
+5. High memory consumption
+6. Slow filtering operations
+
+---
+
+# Frontend Optimization Strategies
+
+## 1. Component-Based Architecture
+
+The UI is split into reusable components:
+
+```text
+App
+ ├── NotificationList
+ ├── NotificationCard
+ ├── FilterPanel
+ ├── Header
+ └── PaginationControls
+```
+
+Benefits:
+- maintainability
+- isolated rendering
+- improved scalability
+
+---
+
+# 2. Memoization
+
+React.memo is used to prevent unnecessary component re-renders.
+
+Example:
+
+```tsx
+export default React.memo(NotificationCard);
+```
+
+Benefits:
+- reduced rendering cost
+- improved UI responsiveness
+
+---
+
+# 3. useMemo Optimization
+
+Filtering and sorting operations are memoized.
+
+Example:
+
+```tsx
+const filteredNotifications = useMemo(() => {
+  return notifications.filter(
+    (notification) => notification.type === selectedType
+  );
+}, [notifications, selectedType]);
+```
+
+Benefits:
+- avoids repeated expensive calculations
+- improves rendering efficiency
+
+---
+
+# 4. useCallback Optimization
+
+Callback functions are memoized to prevent unnecessary child component renders.
+
+Example:
+
+```tsx
+const handleMarkAsRead = useCallback((id: string) => {
+  markNotificationAsRead(id);
+}, []);
+```
+
+Benefits:
+- stable function references
+- reduced render propagation
+
+---
+
+# 5. Lazy Loading
+
+Large notification datasets should use lazy loading or infinite scrolling.
+
+Benefits:
+- reduced initial load time
+- improved rendering performance
+- better user experience
+
+---
+
+# 6. Pagination
+
+Notifications are fetched in paginated batches.
+
+Example:
+
+```http
+GET /notifications?page=1&limit=10
+```
+
+Benefits:
+- smaller payload sizes
+- faster rendering
+- lower memory usage
+
+---
+
+# 7. Efficient State Updates
+
+State updates are optimized to avoid full list re-rendering.
+
+Instead of replacing the entire notification array:
+
+Bad Practice:
+
+```tsx
+setNotifications(newNotifications);
+```
+
+Optimized Update:
+
+```tsx
+setNotifications((prev) =>
+  prev.map((notification) =>
+    notification.id === updated.id
+      ? updated
+      : notification
+  )
+);
+```
+
+Benefits:
+- reduced rendering overhead
+- smoother UI updates
+
+---
+
+# 8. Notification Deduplication
+
+Duplicate notifications received through WebSockets are filtered before rendering.
+
+Benefits:
+- prevents redundant rendering
+- improves UI consistency
+
+---
+
+# 9. Debounced Filtering
+
+Search and filter operations are debounced.
+
+Benefits:
+- reduced unnecessary renders
+- improved responsiveness
+
+---
+
+# API Optimization
+
+Frontend API requests are optimized using:
+
+- pagination
+- caching
+- lightweight responses
+- selective field fetching
+
+---
+
+# Responsive UI Design
+
+Material UI responsive layouts ensure compatibility across:
+
+- desktop
+- tablet
+- mobile devices
+
+Benefits:
+- accessibility
+- improved usability
+- consistent experience
+
+---
+
+# Frontend Logging Integration
+
+Frontend events are logged using the reusable logging middleware.
+
+## Example
+
+```ts
+await Log(
+  "frontend",
+  "info",
+  "notification-ui",
+  "User marked notification as read"
+);
+```
+
+```ts
+await Log(
+  "frontend",
+  "error",
+  "notification-ui",
+  "Failed to establish WebSocket connection"
+);
+```
+
+---
+
+# Future Frontend Enhancements
+
+Potential future improvements include:
+
+- Service worker integration
+- Offline notification caching
+- Push notifications
+- Virtualized lists
+- Optimistic UI updates
+- Notification grouping
+- Background synchronization
+
+These enhancements improve scalability and user experience.
